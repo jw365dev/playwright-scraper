@@ -1,6 +1,6 @@
 import asyncio
 import csv
-from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
 
 async def scrape_barchart_top_100():
     try:
@@ -10,9 +10,17 @@ async def scrape_barchart_top_100():
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
-            await page.goto(url)
+            await page.goto(url, timeout=60000)  # 60 seconds
 
-            await page.wait_for_selector("table.bc-table")
+            try:
+                await page.wait_for_selector("table.bc-table", timeout=30000)  # 30 seconds
+            except PlaywrightTimeoutError:
+                print("❌ Table did not load in time. Saving page content for debugging.")
+                html = await page.content()
+                with open("debug_page.html", "w", encoding="utf-8") as f:
+                    f.write(html)
+                await browser.close()
+                return
 
             headers = await page.eval_on_selector_all(
                 "table.bc-table thead tr th",
