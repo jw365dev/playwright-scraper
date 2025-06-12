@@ -23,8 +23,13 @@ jobs:
           pip install -r requirements.txt
           playwright install --with-deps
 
-      - name: Run scraper
-        run: python barchart_scraper.py
+#      - name: Run scraper
+#        run: python barchart_scraper.py
+        
+      - name: Run scraper with debug output
+        run: |
+          python barchart_scraper.py || (echo "❌ Script failed" && exit 1)
+
 
       - name: Upload CSV artifact
         uses: actions/upload-artifact@v4
