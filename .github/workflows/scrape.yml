@@ -3,7 +3,7 @@ name: Scrape Barchart Top 100
 on:
   schedule:
     - cron: '0 12 * * *'  # Runs every day at 12:00 UTC
-  workflow_dispatch:       # Allows manual trigger
+  workflow_dispatch:
 
 jobs:
   scrape:
@@ -25,14 +25,29 @@ jobs:
 
 #      - name: Run scraper
 #        run: python barchart_scraper.py
-        
       - name: Run scraper with debug output
         run: |
           python barchart_scraper.py || (echo "❌ Script failed" && exit 1)
-
 
       - name: Upload CSV artifact
         uses: actions/upload-artifact@v4
         with:
           name: top-100-stocks
           path: top_100_stocks.csv
+
+      - name: Upload debug HTML if exists
+        if: always()
+        run: |
+          if [ -f debug_page.html ]; then
+            echo "Uploading debug_page.html"
+          else
+            echo "No debug_page.html to upload"
+          fi
+        continue-on-error: true
+
+      - name: Upload debug_page.html artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-page
+          path: debug_page.html
